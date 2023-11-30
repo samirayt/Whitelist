@@ -15,10 +15,13 @@
  local Section = Tab:AddSection({
      Name = "Main"
  })
-  
-Tab:AddButton({
-	Name = "Auto Parry",
-	Callback = function()
+ 
+--toggle
+Tab:AddToggle({
+	  	Name = "Auto Parry",
+	  	Default = false,
+	  	Callback = function(Value)
+	  		print(Value)
 	  local function startAutoParry()
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
@@ -109,10 +112,12 @@ local function stopAutoParry()
 end
 })
 
+--Toggle
 Tab:AddButton({
-	Name = "DetectSpam",
+	Name = "Button!",
 	Callback = function()
-      		getgenv().AutoDetectSpam = true
+      		print("button pressed")
+  	getgenv().AutoDetectSpam = true
 
 --///////////////////////////////////////////////////////////////////--
 
@@ -224,15 +229,12 @@ Balls.ChildAdded:Connect(function(ball)
   getgenv().SpamClickA = false
   ParryCounter = 0
   GetBall(ball)
-end
+end)
   	end    
 })
 
- local Section = Tab:AddSection({
-     Name = "Esp"
- })
- 
-Tab1:AddToggle({
+--Toggle
+Tab:AddToggle({
 	  	Name = "Esp Ball",
 	  	Default = false,
 	  	Callback = function(Value)
@@ -344,6 +346,7 @@ local function ESP_plr()
     if plr and plr.Character and plr.Character:FindFirstChild("ESP_samiyt") then
       plr.Character.ESP_samirayt:Destroy()
     end
+  end
   end
 	  	end 
  })	
