@@ -289,8 +289,6 @@ local ToggleParry = AddToggle(Main, {
   end
 })
 
---Detect
-
 local MobileToggle = AddMobileToggle({
   Name = "Auto DetectSpam",
   Visible = true,
@@ -543,76 +541,3 @@ local Toggle6 = AddToggle(Visual, {
     ESP_Ball()
   end
 })
-
-
---Tab04
-
-local sectionButton = AddSection(Shop, {"Comprar"})
-
-AddButton(Shop, {
-  Name = "ComprarCaixa Espada",
-  Callback = function()
-    local args = {
-    [1] = "PromptPurchaseCrate",
-    [2] = workspace.Spawn.Crates.NormalSwordCrate
-}
-
-game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer(unpack(args))
-
-  end
-})
-
-AddButton(Shop, {
-  Name = "ComprarCaixa Explosão",
-  Callback = function()
-    local args = {
-    [1] = "PromptPurchaseCrate",
-    [2] = workspace.Spawn.Crates.NormalExplosionCrate
-}
-
-game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer(unpack(args))
-  end
-})
-
-local sectionToggle = AddSection(Shop, {"AutoComprar"})
-
-local Toggle34 = AddToggle(Shop, {
-  Name = "AutoComprarCaixa Espada",
-  Default = false,
-  Callback = function(Value)
-   _G.AutoOpenBox01 = Value
-wait()
-while _G.AutoOpenBox01 == true do
- wait(1)
-local args = {
-    [1] = "PromptPurchaseCrate",
-    [2] = workspace.Spawn.Crates.NormalSwordCrate
-}
-
-game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer(unpack(args))
- end
-  end
-})
-
-local function Box02()
-  
-while _G.AutoOpenBox02 == true do
-   wait(1)
-  local args = {
-      [1] = "PromptPurchaseCrate",
-      [2] = workspace.Spawn.Crates.NormalExplosionCrate
-  }
-  
-  game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer(unpack(args))
-   end
-  end
-
-local Toggle23 = AddToggle(Shop, {
-  Name = "AutoComprarCaixa Explosão",
-  Default = false,
-  Callback = function(Value)
-   _G.AutoOpenBox02 = Value
-   Box02()
-  end
-})
-  
