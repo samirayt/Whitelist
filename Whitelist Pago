@@ -1,1 +1,618 @@
+--Remover AntiCheat
 
+print("Bypassing Security Checks..")
+
+game:GetService("ReplicatedStorage").Security.RemoteEvent:Destroy()
+game:GetService("ReplicatedStorage").Security[""]:Destroy()
+game:GetService("ReplicatedStorage").Security:Destroy()
+game:GetService("Players").LocalPlayer.PlayerScripts.Client.DeviceChecker:Destroy()
+
+--Codigos esps
+
+local function ESP_Ball()
+  while getgenv().ESP_Ball == true do task.wait()
+    local plr = game.Players.LocalPlayer
+    local plrRP = plr.Character:FindFirstChild("HumanoidRootPart")
+    for ___,ball in pairs(workspace:WaitForChild("Balls", 10):GetChildren()) do
+      if ball and ball:IsA("Part") and ball:GetAttribute("realBall") == true and not ball:FindFirstChild("ESP_samirayt") then
+        
+        local Folder = Instance.new("Folder", ball)
+        local BHA = Instance.new("BoxHandleAdornment",Folder)
+        local BillboardGui = Instance.new("BillboardGui", BHA)
+        local TextLabel = Instance.new("TextLabel", BillboardGui)
+        Folder.Name = "ESP_samirayt"
+        
+        BHA.Size = Vector3.new(1,0, 1,0)
+        BHA.Name = "ESP_samirayt"
+        BHA.AlwaysOnTop = true
+        BHA.ZIndex = 10
+        BHA.Transparency = 0
+        
+        BillboardGui.Adornee = ball
+        BillboardGui.Size = UDim2.new(0, 100, 0, 150)
+        BillboardGui.StudsOffset = Vector3.new(0, 1, 0)
+        BillboardGui.AlwaysOnTop = true
+        
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.Position = UDim2.new(0, 0, 0, -50)
+        TextLabel.Size = UDim2.new(0, 100, 0, 100)
+        TextLabel.TextSize = 10
+        TextLabel.TextColor3 = Color3.new(1, 1, 1)
+        TextLabel.TextStrokeTransparency = 0
+        TextLabel.TextYAlignment = Enum.TextYAlignment.Bottom
+        TextLabel.Text = "Ball <...>"
+        TextLabel.ZIndex = 15
+        TextLabel.TextColor3 = Color3.fromRGB(0,255,0)
+        
+        task.spawn(function()
+          while task.wait() do
+            local plr = game.Players.LocalPlayer
+            local plrRP = plr.Character:FindFirstChild("HumanoidRootPart")
+            if plrRP and ball then
+              local distance = math.floor((plrRP.Position - ball.Position).Magnitude)
+              TextLabel.Text = "Ball <" .. tostring(distance) .. ">"
+            end
+          end
+        end)
+      end
+    end
+  end
+  task.wait()
+  for _,v in pairs(workspace:WaitForChild("Balls", 10):GetChildren()) do
+    if v:FindFirstChild("ESP_samirayt") then
+      v:Destroy()
+    end
+  end
+end
+
+local function ESP_plr()
+  while getgenv().ESP_plr == true do task.wait()
+    local plr1 = game.Players.LocalPlayer
+    for _,plr in pairs(game.Players:GetPlayers()) do
+      if plr.Name ~= plr1.Name and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and not plr.Character:FindFirstChild("ESP_samirayt") and workspace:WaitForChild("Alive", 60):FindFirstChild(plr.Name) then
+        
+        local Folder = Instance.new("Folder", plr.Character)
+        local BHA = Instance.new("BoxHandleAdornment", Folder)
+        local BillboardGui = Instance.new("BillboardGui", BHA)
+        local TextLabel = Instance.new("TextLabel", BillboardGui)
+        Folder.Name = "ESP_samirayt"
+        
+        BHA.Size = Vector3.new(1, 0, 1, 0)
+        BHA.Name = "ESP_samirayt"
+        BHA.AlwaysOnTop = true
+        BHA.ZIndex = 10
+        BHA.Transparency = 0
+        
+        BillboardGui.Adornee = plr.Character.HumanoidRootPart
+        BillboardGui.Size = UDim2.new(0, 100, 0, 150)
+        BillboardGui.StudsOffset = Vector3.new(0, 1, 0)
+        BillboardGui.AlwaysOnTop = true
+        
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.Position = UDim2.new(0, 0, 0, -50)
+        TextLabel.Size = UDim2.new(0, 100, 0, 100)
+        TextLabel.TextSize = 10
+        TextLabel.TextColor3 = Color3.new(1, 1, 1)
+        TextLabel.TextStrokeTransparency = 0
+        TextLabel.TextYAlignment = Enum.TextYAlignment.Bottom
+        TextLabel.Text = plr.Name .. " <...>"
+        TextLabel.ZIndex = 15
+        TextLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+        
+        task.spawn(function()
+          while task.wait() do
+            local plrRP = plr1.Character:FindFirstChild("HumanoidRootPart")
+            if plr1 and plrRP and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+              local distance = math.floor((plrRP.Position - plr.Character.HumanoidRootPart.Position).Magnitude)
+              TextLabel.Text = plr.Name .. " <" .. tostring(distance) .. ">"
+            end
+          end
+        end)
+      end
+    end
+  end
+  task.wait()
+  for _,plr in pairs(game.Players:GetPlayers()) do
+    if plr and plr.Character and plr.Character:FindFirstChild("ESP_samiyt") then
+      plr.Character.ESP_samirayt:Destroy()
+    end
+  end
+end
+
+--AutoParry
+
+local function startAutoParry()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local runService = game:GetService("RunService")
+    local parryButtonPress = replicatedStorage.Remotes.ParryButtonPress
+    local ballsFolder = workspace:WaitForChild("Balls")
+
+    print(".")
+
+    local function onCharacterAdded(newCharacter)
+        character = newCharacter
+    end
+
+    player.CharacterAdded:Connect(onCharacterAdded)
+
+    local focusedBall = nil  
+
+    local function chooseNewFocusedBall()
+        local balls = ballsFolder:GetChildren()
+        focusedBall = nil
+        for _, ball in ipairs(balls) do
+            if ball:GetAttribute("realBall") == true then
+                focusedBall = ball
+                break
+            end
+        end
+    end
+
+    chooseNewFocusedBall()
+
+    local function timeUntilImpact(ballVelocity, distanceToPlayer, playerVelocity)
+        local directionToPlayer = (character.HumanoidRootPart.Position - focusedBall.Position).Unit
+        local velocityTowardsPlayer = ballVelocity:Dot(directionToPlayer) - playerVelocity:Dot(directionToPlayer)
+        
+        if velocityTowardsPlayer <= 0 then
+            return math.huge
+        end
+        
+        local distanceToBeCovered = distanceToPlayer - 40
+        return distanceToBeCovered / velocityTowardsPlayer
+    end
+
+    local BASE_THRESHOLD = 0.15
+    local VELOCITY_SCALING_FACTOR = 0.002
+
+    local function getDynamicThreshold(ballVelocityMagnitude)
+        local adjustedThreshold = BASE_THRESHOLD - (ballVelocityMagnitude * VELOCITY_SCALING_FACTOR)
+        return math.max(0.12, adjustedThreshold)
+    end
+
+    local function checkBallDistance()
+        if not character:FindFirstChild("Highlight") then return end
+        local charPos = character.PrimaryPart.Position
+        local charVel = character.PrimaryPart.Velocity
+
+        if focusedBall and not focusedBall.Parent then
+            chooseNewFocusedBall()
+        end
+
+        if not focusedBall then return end
+
+        local ball = focusedBall
+        local distanceToPlayer = (ball.Position - charPos).Magnitude
+
+        if distanceToPlayer <= 12 then
+            parryButtonPress:Fire()
+            return
+        end
+
+        local timeToImpact = timeUntilImpact(ball.Velocity, distanceToPlayer, charVel)
+        local dynamicThreshold = getDynamicThreshold(ball.Velocity.Magnitude)
+
+        if timeToImpact < dynamicThreshold then
+            parryButtonPress:Fire()
+        end
+    end
+    heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        checkBallDistance()
+    end)
+end
+
+local function stopAutoParry()
+    if heartbeatConnection then
+        heartbeatConnection:Disconnect()
+        heartbeatConnection = nil
+    end
+end
+
+--noclip
+
+function noClip()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local rootPart = character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart
+
+    local function isDescendantOfTerrain(part)
+        local terrain = game.Workspace.Terrain
+        return terrain and terrain:IsAncestorOf(part)
+    end
+
+    game:GetService("RunService").Stepped:Connect(function()
+        if noClipEnabled then
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") and not isDescendantOfTerrain(part) then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+end 
+
+--OlharBola
+
+local function StareBall()
+  while getgenv().StareBall do task.wait()
+    local Balls = workspace:WaitForChild("Balls", 10):GetChildren()
+    for i,ball in pairs(Balls) do
+      if ball:IsA("Part") and i < 2 then
+        local plr = game.Players.LocalPlayer
+        local plrRP = plr.Character:FindFirstChild("HumanoidRootPart")
+        if plrRP then
+              local plrPos = plrRP.Position
+              local ballPos = ball.Position
+              local modTPos = Vector3.new(ballPos.X, plrPos.Y, ballPos.Z)
+              local newCF = CFrame.new(plrPos, modTPos)
+              plrRP.CFrame = newCF
+            end
+        end
+    end
+  end
+end
+
+loadstring(game:HttpGet(("https://raw.githubusercontent.com/REDzHUB/LibraryV2/main/redzLib")))()
+
+local workspace = game:GetService("Workspace")
+local players = game:GetService("Players")
+local localPlayer = players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local heartbeatConnection
+
+--Tabs
+
+local Main = MakeTab({Name = "Principal"})
+
+local Player = MakeTab({Name = "Jogador"})
+
+local Shop = MakeTab({Name = "Loja"})
+
+local Visual = MakeTab({Name = "Visual"})
+
+local section01 = AddSection(Main, {"AutoRebater"})
+
+local ToggleParry = AddToggle(Main, {
+  Name = "AutoParry",
+  Default = false,
+  Callback = function(Value)
+    if Value then
+            startAutoParry()
+            
+        else
+            stopAutoParry()
+            
+        end
+  end
+})
+
+--Detect
+
+local MobileToggle = AddMobileToggle({
+  Name = "Auto DetectSpam",
+  Visible = true,
+  Callback = function(true)
+local Button = Tab:CreateButton({
+    Name = "Auto Detect",
+    Callback = function()
+        getgenv().AutoDetectSpam = true
+
+        --///////////////////////////////////////////////////////////////////--
+        
+        local Alive = workspace:WaitForChild("Alive", 9e9)
+        local Players = game:GetService("Players")
+        local Player = Players.LocalPlayer
+        
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local Remotes = ReplicatedStorage:WaitForChild("Remotes", 9e9)
+        local ParryAttempt = Remotes:WaitForChild("ParryAttempt", 9e9)
+        local Balls = workspace:WaitForChild("Balls", 9e9)
+        
+        --///////////////////////////////////////////////////////////////////--
+        
+        local function get_ProxyPlayer()
+          local Distance = math.huge
+          local plrRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+          local PlayerReturn = nil
+          
+          for _,plr1 in pairs(Alive:GetChildren()) do
+            if plr1:FindFirstChild("Humanoid") and plr1.Humanoid.Health > 50 then
+              if plr1.Name ~= Player.Name and plrRP and plr1:FindFirstChild("HumanoidRootPart") then
+                local magnitude = (plr1.HumanoidRootPart.Position - plrRP.Position).Magnitude
+                if magnitude <= Distance then
+                  Distance = magnitude
+                  PlayerReturn = plr1
+                end
+              end
+            end
+          end
+          return PlayerReturn
+        end
+        
+        local function SuperClick()
+          task.spawn(function()
+            if IsAlive() and #Alive:GetChildren() > 1 then
+              local args1 = 0.5
+              local args2 = CFrame.new()
+              local args3 = {["enzo"] = Vector3.new()}
+              local args4 = {500, 500}
+              
+              if args1 and args2 and args3 and args4 then
+                ParryAttempt:FireServer(args1, args2, args3, args4)
+              end
+            end
+          end)
+        end
+        
+        task.spawn(function()
+          while task.wait() do
+            if getgenv().SpamClickA and getgenv().AutoDetectSpam then
+              SuperClick()
+            end
+          end
+        end)
+        
+        local ParryCounter = 0
+        local DetectSpamDistance = 0
+        
+        local function GetBall(ball)
+          local Target = ""
+          
+          ball:GetPropertyChangedSignal("Position"):Connect(function()
+            local PlayerPP = Player and Player.Character and Player.Character.PrimaryPart
+            local NearestPlayer = get_ProxyPlayer()
+            
+            if ball and PlayerPP and NearestPlayer and NearestPlayer.PrimaryPart then
+              local PlayerDistance = (PlayerPP.Position - NearestPlayer.PrimaryPart.Position).Magnitude
+              local BallDistance = (PlayerPP.Position - ball.Position).Magnitude
+              
+              DetectSpamDistance = 25 + math.clamp(ParryCounter / 3, 0, 25)
+              
+              if ParryCounter > 2 and PlayerDistance < DetectSpamDistance and BallDistance < 55 then
+                getgenv().SpamClickA = true
+              else
+                getgenv().SpamClickA = false
+              end
+            end
+          end)
+          ball:GetAttributeChangedSignal("target"):Connect(function()
+            Target = ball:GetAttribute("target")
+            local NearestPlayer = get_ProxyPlayer()
+            
+            if NearestPlayer then
+              if Target == NearestPlayer.Name or Target == Player.Name then
+                ParryCounter = ParryCounter + 1
+              else
+                ParryCounter = 0
+              end
+            end
+          end)
+        end
+        
+        for _,ball in pairs(Balls:GetChildren()) do
+          if ball and not ball:GetAttribute("realBall") then
+            return
+          end
+          
+          GetBall(ball)
+        end
+        
+        Balls.ChildAdded:Connect(function(ball)
+          if not getgenv().AutoDetectSpam then
+            return
+          elseif ball and not ball:GetAttribute("realBall") then
+            return
+          end
+          
+          getgenv().SpamClickA = false
+          ParryCounter = 0
+          GetBall(ball)
+        end)
+end,
+}) 
+
+  end
+})
+
+local section03 = AddSection(Main, {"Bola"})
+
+local Toggle3 = AddToggle(Main, {
+  Name = "Olhar Pra Bola",
+  Default = false,
+  Callback = function(Value)
+   getgenv().StareBall = state
+    StareBall()
+  end
+})
+
+local section095 = AddSection(Main, {"Funções Legais"})
+
+local Toggle55 = AddToggle(Main, {
+  Name = "EmojiCustomizado",
+  Default = false,
+  Callback = function(Value)
+   _G.EmojiCustom = Value
+wait()
+while _G.EmojiCustom == true do
+ wait(1)
+ local args = {
+    [1] = true,
+    [2] = "Empyrean"
+}
+
+game:GetService("ReplicatedStorage").Remotes.CustomEmote:FireServer(unpack(args))
+
+ end
+  end
+})
+
+local section084 = AddSection(Main, {"AutoVotar"})
+
+local VotarEscolhido
+
+local Dropdownpet = AddDropdown(Main, {
+  Name = "Escolha o Modo",
+  Options = {"Classico", "2 times", "4 times"},
+  Default = "Nenhum",
+  Callback = function(Value)
+    VotarEscolhido = Value
+  end
+})
+
+local ToggleVote = AddToggle(Main, {
+  Name = "AutoVotar",
+  Default = false,
+  Callback = function(Value)
+   _G.AutoVotar = Value
+wait()
+while _G.AutoVotar == true do
+ wait(2)
+ if VotarEscolhido == "Classico" then
+  local args = {
+    [1] = "FFA"
+}
+
+game:GetService("ReplicatedStorage").Packages._Index:FindFirstChild("sleitnick_net@0.1.0").net:FindFirstChild("RE/UpdateVotes"):FireServer(unpack(args))
+
+ end
+ 
+  if VotarEscolhido == "2 times" then
+   local args = {
+    [1] = "Team2"
+}
+
+game:GetService("ReplicatedStorage").Packages._Index:FindFirstChild("sleitnick_net@0.1.0").net:FindFirstChild("RE/UpdateVotes"):FireServer(unpack(args))
+
+  end
+  
+   if VotarEscolhido == "4 times" then
+    local args = {
+    [1] = "Team4"
+}
+
+game:GetService("ReplicatedStorage").Packages._Index:FindFirstChild("sleitnick_net@0.1.0").net:FindFirstChild("RE/UpdateVotes"):FireServer(unpack(args))
+
+   end
+ wait()
+ end
+  end
+})
+
+--Tab02
+
+local Slider01 = AddSlider(Player, {
+  Name = "<< Velocidade <Padrão 36>",
+  MinValue = 15,
+  MaxValue = 100,
+  Default = 36,
+  Increase = 5,
+  Callback = function(v)
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+  end
+})
+
+local Toggle4 = AddToggle(Player, {
+  Name = "Atravessar Paredes",
+  Default = false,
+  Callback = function(Value)
+   noClipEnabled = Value
+           noClip()
+  end
+})
+
+
+--Tab03
+
+local Toggle5 = AddToggle(Visual, {
+  Name = "Player ESP",
+  Default = false,
+  Callback = function(Value)
+   getgenv().ESP_plr = Value
+    ESP_plr()
+  end
+})
+
+local Toggle6 = AddToggle(Visual, {
+  Name = "Bola ESP",
+  Default = false,
+  Callback = function(Value)
+   getgenv().ESP_Ball = Value
+    ESP_Ball()
+  end
+})
+
+
+--Tab04
+
+local sectionButton = AddSection(Shop, {"Comprar"})
+
+AddButton(Shop, {
+  Name = "ComprarCaixa Espada",
+  Callback = function()
+    local args = {
+    [1] = "PromptPurchaseCrate",
+    [2] = workspace.Spawn.Crates.NormalSwordCrate
+}
+
+game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer(unpack(args))
+
+  end
+})
+
+AddButton(Shop, {
+  Name = "ComprarCaixa Explosão",
+  Callback = function()
+    local args = {
+    [1] = "PromptPurchaseCrate",
+    [2] = workspace.Spawn.Crates.NormalExplosionCrate
+}
+
+game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer(unpack(args))
+  end
+})
+
+local sectionToggle = AddSection(Shop, {"AutoComprar"})
+
+local Toggle34 = AddToggle(Shop, {
+  Name = "AutoComprarCaixa Espada",
+  Default = false,
+  Callback = function(Value)
+   _G.AutoOpenBox01 = Value
+wait()
+while _G.AutoOpenBox01 == true do
+ wait(1)
+local args = {
+    [1] = "PromptPurchaseCrate",
+    [2] = workspace.Spawn.Crates.NormalSwordCrate
+}
+
+game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer(unpack(args))
+ end
+  end
+})
+
+local function Box02()
+  
+while _G.AutoOpenBox02 == true do
+   wait(1)
+  local args = {
+      [1] = "PromptPurchaseCrate",
+      [2] = workspace.Spawn.Crates.NormalExplosionCrate
+  }
+  
+  game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer(unpack(args))
+   end
+  end
+
+local Toggle23 = AddToggle(Shop, {
+  Name = "AutoComprarCaixa Explosão",
+  Default = false,
+  Callback = function(Value)
+   _G.AutoOpenBox02 = Value
+   Box02()
+  end
+})
+  
