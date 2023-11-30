@@ -133,11 +133,8 @@ local Button = Tab:CreateButton({
           ParryCounter = 0
           GetBall(ball)
         end)
-end,
+end
 }) 
-
-  end
-})
 
 local section095 = AddSection(Main, {"Funções Legais"})
 
