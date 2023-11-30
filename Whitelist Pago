@@ -1,380 +1,358 @@
+    --local
+    local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
-if not _G.Ignore then
-    _G.Ignore = {} -- Add Instances to this table to ignore them (e.g. _G.Ignore = {workspace.Map, workspace.Map2})
-end
-if not _G.WaitPerAmount then
-    _G.WaitPerAmount = 500 -- Set Higher or Lower depending on your computer's performance
-end
-if _G.SendNotifications == nil then
-    _G.SendNotifications = true -- Set to false if you don't want notifications
-end
-if _G.ConsoleLogs == nil then
-    _G.ConsoleLogs = false -- Set to true if you want console logs (mainly for debugging)
+   --windows
+   local Window = OrionLib:MakeWindow({Name = "Berserk", HidePremium = false, SaveConfig = true, ConfigFolder = "BerserCgf", IntroEnabled = false})
+   
+     --tap1
+  local Tab = Window:MakeTab({
+     Name = "Combat ",
+     Icon = "rbxassetid://4483345998",
+     PremiumOnly = false
+ })
+ 
+--sec
+ local Section = Tab:AddSection({
+     Name = "Main"
+ })
+  
+--Button
+Tab:AddButton({
+	Name = "Auto Parry",
+	Callback = function()
+	  local function startAutoParry()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local runService = game:GetService("RunService")
+    local parryButtonPress = replicatedStorage.Remotes.ParryButtonPress
+    local ballsFolder = workspace:WaitForChild("Balls")
+
+    print(".")
+
+    local function onCharacterAdded(newCharacter)
+        character = newCharacter
+    end
+
+    player.CharacterAdded:Connect(onCharacterAdded)
+
+    local focusedBall = nil  
+
+    local function chooseNewFocusedBall()
+        local balls = ballsFolder:GetChildren()
+        focusedBall = nil
+        for _, ball in ipairs(balls) do
+            if ball:GetAttribute("realBall") == true then
+                focusedBall = ball
+                break
+            end
+        end
+    end
+
+    chooseNewFocusedBall()
+
+    local function timeUntilImpact(ballVelocity, distanceToPlayer, playerVelocity)
+        local directionToPlayer = (character.HumanoidRootPart.Position - focusedBall.Position).Unit
+        local velocityTowardsPlayer = ballVelocity:Dot(directionToPlayer) - playerVelocity:Dot(directionToPlayer)
+        
+        if velocityTowardsPlayer <= 0 then
+            return math.huge
+        end
+        
+        local distanceToBeCovered = distanceToPlayer - 40
+        return distanceToBeCovered / velocityTowardsPlayer
+    end
+
+    local BASE_THRESHOLD = 0.15
+    local VELOCITY_SCALING_FACTOR = 0.002
+
+    local function getDynamicThreshold(ballVelocityMagnitude)
+        local adjustedThreshold = BASE_THRESHOLD - (ballVelocityMagnitude * VELOCITY_SCALING_FACTOR)
+        return math.max(0.12, adjustedThreshold)
+    end
+
+    local function checkBallDistance()
+        if not character:FindFirstChild("Highlight") then return end
+        local charPos = character.PrimaryPart.Position
+        local charVel = character.PrimaryPart.Velocity
+
+        if focusedBall and not focusedBall.Parent then
+            chooseNewFocusedBall()
+        end
+
+        if not focusedBall then return end
+
+        local ball = focusedBall
+        local distanceToPlayer = (ball.Position - charPos).Magnitude
+
+        if distanceToPlayer <= 12 then
+            parryButtonPress:Fire()
+            return
+        end
+
+        local timeToImpact = timeUntilImpact(ball.Velocity, distanceToPlayer, charVel)
+        local dynamicThreshold = getDynamicThreshold(ball.Velocity.Magnitude)
+
+        if timeToImpact < dynamicThreshold then
+            parryButtonPress:Fire()
+        end
+    end
+    heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        checkBallDistance()
+    end)
 end
 
-
-
-if not game:IsLoaded() then
-    repeat
-        task.wait()
-    until game:IsLoaded()
-end
-if not _G.Settings then
-    _G.Settings = {
-        Players = {
-            ["Ignore Me"] = true,
-            ["Ignore Others"] = true,
-            ["Ignore Tools"] = true
-        },
-        Meshes = {
-            NoMesh = false,
-            NoTexture = false,
-            Destroy = false
-        },
-        Images = {
-            Invisible = true,
-            Destroy = false
-        },
-        Explosions = {
-            Smaller = true,
-            Invisible = false, -- Not recommended for PVP games
-            Destroy = false -- Not recommended for PVP games
-        },
-        Particles = {
-            Invisible = true,
-            Destroy = false
-        },
-        TextLabels = {
-            LowerQuality = false,
-            Invisible = false,
-            Destroy = false
-        },
-        MeshParts = {
-            LowerQuality = true,
-            Invisible = false,
-            NoTexture = false,
-            NoMesh = false,
-            Destroy = false
-        },
-        Other = {
-            ["FPS Cap"] = 520, -- Set this true to uncap FPS
-            ["No Camera Effects"] = true,
-            ["No Clothes"] = true,
-            ["Low Water Graphics"] = true,
-            ["No Shadows"] = true,
-            ["Low Rendering"] = true,
-            ["Low Quality Parts"] = true,
-            ["Low Quality Models"] = true,
-            ["Reset Materials"] = true,
-            ["Lower Quality MeshParts"] = true
-        }
-    }
-end
-local Players, Lighting, StarterGui, MaterialService = game:GetService("Players"), game:GetService("Lighting"), game:GetService("StarterGui"), game:GetService("MaterialService")
-local ME, CanBeEnabled = Players.LocalPlayer, {"ParticleEmitter", "Trail", "Smoke", "Fire", "Sparkles"}
-local function PartOfCharacter(Instance)
-    for i, v in pairs(Players:GetPlayers()) do
-        if v ~= ME and v.Character and Instance:IsDescendantOf(v.Character) then
-            return true
-        end
-    end
-    return false
-end
-local function DescendantOfIgnore(Instance)
-    for i, v in pairs(_G.Ignore) do
-        if Instance:IsDescendantOf(v) then
-            return true
-        end
-    end
-    return false
-end
-local function CheckIfBad(Instance)
-    if not Instance:IsDescendantOf(Players) and (_G.Settings.Players["Ignore Others"] and not PartOfCharacter(Instance) or not _G.Settings.Players["Ignore Others"]) and (_G.Settings.Players["Ignore Me"] and ME.Character and not Instance:IsDescendantOf(ME.Character) or not _G.Settings.Players["Ignore Me"]) and (_G.Settings.Players["Ignore Tools"] and not Instance:IsA("BackpackItem") and not Instance:FindFirstAncestorWhichIsA("BackpackItem") or not _G.Settings.Players["Ignore Tools"])--[[not PartOfCharacter(Instance)]] and (_G.Ignore and not table.find(_G.Ignore, Instance) and not DescendantOfIgnore(Instance) or (not _G.Ignore or type(_G.Ignore) ~= "table" or #_G.Ignore <= 0)) then
-        if Instance:IsA("DataModelMesh") then
-            if _G.Settings.Meshes.NoMesh and Instance:IsA("SpecialMesh") then
-                Instance.MeshId = ""
-            end
-            if _G.Settings.Meshes.NoTexture and Instance:IsA("SpecialMesh") then
-                Instance.TextureId = ""
-            end
-            if _G.Settings.Meshes.Destroy or _G.Settings["No Meshes"] then
-                Instance:Destroy()
-            end
-        elseif Instance:IsA("FaceInstance") then
-            if _G.Settings.Images.Invisible then
-                Instance.Transparency = 1
-                Instance.Shiny = 1
-            end
-            if _G.Settings.Images.LowDetail then
-                Instance.Shiny = 1
-            end
-            if _G.Settings.Images.Destroy then
-                Instance:Destroy()
-            end
-        elseif Instance:IsA("ShirtGraphic") then
-            if _G.Settings.Images.Invisible then
-                Instance.Graphic = ""
-            end
-            if _G.Settings.Images.Destroy then
-                Instance:Destroy()
-            end
-        elseif table.find(CanBeEnabled, Instance.ClassName) then
-            if _G.Settings["Invisible Particles"] or _G.Settings["No Particles"] or (_G.Settings.Other and _G.Settings.Other["Invisible Particles"]) or (_G.Settings.Particles and _G.Settings.Particles.Invisible) then
-                Instance.Enabled = false
-            end
-            if (_G.Settings.Other and _G.Settings.Other["No Particles"]) or (_G.Settings.Particles and _G.Settings.Particles.Destroy) then
-                Instance:Destroy()
-            end
-        elseif Instance:IsA("PostEffect") and (_G.Settings["No Camera Effects"] or (_G.Settings.Other and _G.Settings.Other["No Camera Effects"])) then
-            Instance.Enabled = false
-        elseif Instance:IsA("Explosion") then
-            if _G.Settings["Smaller Explosions"] or (_G.Settings.Other and _G.Settings.Other["Smaller Explosions"]) or (_G.Settings.Explosions and _G.Settings.Explosions.Smaller) then
-                Instance.BlastPressure = 1
-                Instance.BlastRadius = 1
-            end
-            if _G.Settings["Invisible Explosions"] or (_G.Settings.Other and _G.Settings.Other["Invisible Explosions"]) or (_G.Settings.Explosions and _G.Settings.Explosions.Invisible) then
-                Instance.BlastPressure = 1
-                Instance.BlastRadius = 1
-                Instance.Visible = false
-            end
-            if _G.Settings["No Explosions"] or (_G.Settings.Other and _G.Settings.Other["No Explosions"]) or (_G.Settings.Explosions and _G.Settings.Explosions.Destroy) then
-                Instance:Destroy()
-            end
-        elseif Instance:IsA("Clothing") or Instance:IsA("SurfaceAppearance") or Instance:IsA("BaseWrap") then
-            if _G.Settings["No Clothes"] or (_G.Settings.Other and _G.Settings.Other["No Clothes"]) then
-                Instance:Destroy()
-            end
-        elseif Instance:IsA("BasePart") and not Instance:IsA("MeshPart") then
-            if _G.Settings["Low Quality Parts"] or (_G.Settings.Other and _G.Settings.Other["Low Quality Parts"]) then
-                Instance.Material = Enum.Material.Plastic
-                Instance.Reflectance = 0
-            end
-        elseif Instance:IsA("TextLabel") and Instance:IsDescendantOf(workspace) then
-            if _G.Settings["Lower Quality TextLabels"] or (_G.Settings.Other and _G.Settings.Other["Lower Quality TextLabels"]) or (_G.Settings.TextLabels and _G.Settings.TextLabels.LowerQuality) then
-                Instance.Font = Enum.Font.SourceSans
-                Instance.TextScaled = false
-                Instance.RichText = false
-                Instance.TextSize = 14
-            end
-            if _G.Settings["Invisible TextLabels"] or (_G.Settings.Other and _G.Settings.Other["Invisible TextLabels"]) or (_G.Settings.TextLabels and _G.Settings.TextLabels.Invisible) then
-                Instance.Visible = false
-            end
-            if _G.Settings["No TextLabels"] or (_G.Settings.Other and _G.Settings.Other["No TextLabels"]) or (_G.Settings.TextLabels and _G.Settings.TextLabels.Destroy) then
-                Instance:Destroy()
-            end
-        elseif Instance:IsA("Model") then
-            if _G.Settings["Low Quality Models"] or (_G.Settings.Other and _G.Settings.Other["Low Quality Models"]) then
-                Instance.LevelOfDetail = 1
-            end
-        elseif Instance:IsA("MeshPart") then
-            if _G.Settings["Low Quality MeshParts"] or (_G.Settings.Other and _G.Settings.Other["Low Quality MeshParts"]) or (_G.Settings.MeshParts and _G.Settings.MeshParts.LowerQuality) then
-                Instance.RenderFidelity = 2
-                Instance.Reflectance = 0
-                Instance.Material = Enum.Material.Plastic
-            end
-            if _G.Settings["Invisible MeshParts"] or (_G.Settings.Other and _G.Settings.Other["Invisible MeshParts"]) or (_G.Settings.MeshParts and _G.Settings.MeshParts.Invisible) then
-                Instance.Transparency = 1
-                Instance.RenderFidelity = 2
-                Instance.Reflectance = 0
-                Instance.Material = Enum.Material.Plastic
-            end
-            if _G.Settings.MeshParts and _G.Settings.MeshParts.NoTexture then
-                Instance.TextureID = ""
-            end
-            if _G.Settings.MeshParts and _G.Settings.MeshParts.NoMesh then
-                Instance.MeshId = ""
-            end
-            if _G.Settings["No MeshParts"] or (_G.Settings.Other and _G.Settings.Other["No MeshParts"]) or (_G.Settings.MeshParts and _G.Settings.MeshParts.Destroy) then
-                Instance:Destroy()
-            end
-        end
+local function stopAutoParry()
+    if heartbeatConnection then
+        heartbeatConnection:Disconnect()
+        heartbeatConnection = nil
     end
 end
-if _G.SendNotifications then
-    StarterGui:SetCore("SendNotification", {
-        Title = "https://discord.com/invite/UQRU6Mcy3n",
-        Text = "Loading FPS Booster...",
-        Duration = math.huge,
-        Button1 = "Okay"
-    })
-end
-coroutine.wrap(pcall)(function()
-    if (_G.Settings["Low Water Graphics"] or (_G.Settings.Other and _G.Settings.Other["Low Water Graphics"])) then
-        if not workspace:FindFirstChildOfClass("Terrain") then
-            repeat
-                task.wait()
-            until workspace:FindFirstChildOfClass("Terrain")
-        end
-        workspace:FindFirstChildOfClass("Terrain").WaterWaveSize = 0
-        workspace:FindFirstChildOfClass("Terrain").WaterWaveSpeed = 0
-        workspace:FindFirstChildOfClass("Terrain").WaterReflectance = 0
-        workspace:FindFirstChildOfClass("Terrain").WaterTransparency = 0
-        if sethiddenproperty then
-            sethiddenproperty(workspace:FindFirstChildOfClass("Terrain"), "Decoration", false)
-        else
-            StarterGui:SetCore("SendNotification", {
-                Title = "https://discord.com/invite/UQRU6Mcy3n",
-                Text = "Your exploit does not support sethiddenproperty, please use a different exploit.",
-                Duration = 5,
-                Button1 = "Okay"
-            })
-            warn("Your exploit does not support sethiddenproperty, please use a different exploit.")
-        end
-        if _G.SendNotifications then
-            StarterGui:SetCore("SendNotification", {
-                Title = "https://discord.com/invite/UQRU6Mcy3n",
-                Text = "Low Water Graphics Enabled",
-                Duration = 5,
-                Button1 = "Okay"
-            })
-        end
-        if _G.ConsoleLogs then
-            warn("Low Water Graphics Enabled")
-        end
-    end
-end)
-coroutine.wrap(pcall)(function()
-    if _G.Settings["No Shadows"] or (_G.Settings.Other and _G.Settings.Other["No Shadows"]) then
-        Lighting.GlobalShadows = false
-        Lighting.FogEnd = 9e9
-        Lighting.ShadowSoftness = 0
-        if sethiddenproperty then
-            sethiddenproperty(Lighting, "Technology", 2)
-        else
-            StarterGui:SetCore("SendNotification", {
-                Title = "https://discord.com/invite/UQRU6Mcy3n",
-                Text = "Your exploit does not support sethiddenproperty, please use a different exploit.",
-                Duration = 5,
-                Button1 = "Okay"
-            })
-            warn("Your exploit does not support sethiddenproperty, please use a different exploit.")
-        end
-        if _G.SendNotifications then
-            StarterGui:SetCore("SendNotification", {
-                Title = "https://discord.com/invite/UQRU6Mcy3n",
-                Text = "No Shadows Enabled",
-                Duration = 5,
-                Button1 = "Okay"
-            })
-        end
-        if _G.ConsoleLogs then
-            warn("No Shadows Enabled")
-        end
-    end
-end)
-coroutine.wrap(pcall)(function()
-    if _G.Settings["Low Rendering"] or (_G.Settings.Other and _G.Settings.Other["Low Rendering"]) then
-        settings().Rendering.QualityLevel = 1
-        settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level04
-        if _G.SendNotifications then
-            StarterGui:SetCore("SendNotification", {
-                Title = "https://discord.com/invite/UQRU6Mcy3n",
-                Text = "Low Rendering Enabled",
-                Duration = 5,
-                Button1 = "Okay"
-            })
-        end
-        if _G.ConsoleLogs then
-            warn("Low Rendering Enabled")
-        end
-    end
-end)
-coroutine.wrap(pcall)(function()
-    if _G.Settings["Reset Materials"] or (_G.Settings.Other and _G.Settings.Other["Reset Materials"]) then
-        for i, v in pairs(MaterialService:GetChildren()) do
-            v:Destroy()
-        end
-        MaterialService.Use2022Materials = false
-        if _G.SendNotifications then
-            StarterGui:SetCore("SendNotification", {
-                Title = "https://discord.com/invite/UQRU6Mcy3n",
-                Text = "Reset Materials Enabled",
-                Duration = 5,
-                Button1 = "Okay"
-            })
-        end
-        if _G.ConsoleLogs then
-            warn("Reset Materials Enabled")
-        end
-    end
-end)
-coroutine.wrap(pcall)(function()
-    if _G.Settings["FPS Cap"] or (_G.Settings.Other and _G.Settings.Other["FPS Cap"]) then
-        if setfpscap then
-            if type(_G.Settings["FPS Cap"] or (_G.Settings.Other and _G.Settings.Other["FPS Cap"])) == "string" or type(_G.Settings["FPS Cap"] or (_G.Settings.Other and _G.Settings.Other["FPS Cap"])) == "number" then
-                setfpscap(tonumber(_G.Settings["FPS Cap"] or (_G.Settings.Other and _G.Settings.Other["FPS Cap"])))
-                if _G.SendNotifications then
-                    StarterGui:SetCore("SendNotification", {
-                        Title = "https://discord.com/invite/UQRU6Mcy3n",
-                        Text = "FPS Capped to " .. tostring(_G.Settings["FPS Cap"] or (_G.Settings.Other and _G.Settings.Other["FPS Cap"])),
-                        Duration = 5,
-                        Button1 = "Okay"
-                    })
-                end
-                if _G.ConsoleLogs then
-                    warn("FPS Capped to " .. tostring(_G.Settings["FPS Cap"] or (_G.Settings.Other and _G.Settings.Other["FPS Cap"])))
-                end
-            elseif _G.Settings["FPS Cap"] or (_G.Settings.Other and _G.Settings.Other["FPS Cap"]) == true then
-                setfpscap(1e6)
-                if _G.SendNotifications then
-                    StarterGui:SetCore("SendNotification", {
-                        Title = "https://discord.com/invite/UQRU6Mcy3n",
-                        Text = "FPS Uncapped",
-                        Duration = 5,
-                        Button1 = "Okay"
-                    })
-                end
-                if _G.ConsoleLogs then
-                    warn("FPS Uncapped")
-                end
-            end
-        else
-            StarterGui:SetCore("SendNotification", {
-                Title = "https://discord.com/invite/UQRU6Mcy3n",
-                Text = "FPS Cap Failed",
-                Duration = math.huge,
-                Button1 = "Okay"
-            })
-            warn("FPS Cap Failed")
-        end
-    end
-end)
-game.DescendantAdded:Connect(function(value)
-    wait(_G.LoadedWait or 1)
-    CheckIfBad(value)
-end)
-local Descendants = game:GetDescendants()
-local StartNumber = _G.WaitPerAmount or 500
-local WaitNumber = _G.WaitPerAmount or 500
-if _G.SendNotifications then
-    StarterGui:SetCore("SendNotification", {
-        Title = "discord.gg/rips",
-        Text = "Checking " .. #Descendants .. " Instances...",
-        Duration = 15,
-        Button1 = "Okay"
-    })
-end
-if _G.ConsoleLogs then
-    warn("Checking " .. #Descendants .. " Instances...")
-end
-for i, v in pairs(Descendants) do
-    CheckIfBad(v)
-    if i == WaitNumber then
-        task.wait()
-        if _G.ConsoleLogs then
-            print("Loaded " .. i .. "/" .. #Descendants)
-        end
-        WaitNumber = WaitNumber + StartNumber
-    end
-end
-StarterGui:SetCore("SendNotification", {
-    Title = "https://discord.com/invite/UQRU6Mcy3n",
-    Text = "FPS Booster Loaded!",
-    Duration = math.huge,
-    Button1 = "Okay"
+      	
+  	end    
 })
-warn("FPS Booster Loaded!")
---game.DescendantAdded:Connect(CheckIfBad)
---[[game.DescendantAdded:Connect(function(value)
-    CheckIfBad(value)
-end)]]
+
+
+--Button
+Tab:AddButton({
+	Name = "DetectSpam",
+	Callback = function()
+      		getgenv().AutoDetectSpam = true
+
+--///////////////////////////////////////////////////////////////////--
+
+local Alive = workspace:WaitForChild("Alive", 9e9)
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = ReplicatedStorage:WaitForChild("Remotes", 9e9)
+local ParryAttempt = Remotes:WaitForChild("ParryAttempt", 9e9)
+local Balls = workspace:WaitForChild("Balls", 9e9)
+
+--///////////////////////////////////////////////////////////////////--
+
+local function get_ProxyPlayer()
+  local Distance = math.huge
+  local plrRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+  local PlayerReturn = nil
+  
+  for _,plr1 in pairs(Alive:GetChildren()) do
+    if plr1:FindFirstChild("Humanoid") and plr1.Humanoid.Health > 50 then
+      if plr1.Name ~= Player.Name and plrRP and plr1:FindFirstChild("HumanoidRootPart") then
+        local magnitude = (plr1.HumanoidRootPart.Position - plrRP.Position).Magnitude
+        if magnitude <= Distance then
+          Distance = magnitude
+          PlayerReturn = plr1
+        end
+      end
+    end
+  end
+  return PlayerReturn
+end
+
+local function SuperClick()
+  task.spawn(function()
+    if IsAlive() and #Alive:GetChildren() > 1 then
+      local args1 = 0.0001
+      local args2 = CFrame.new()
+      local args3 = {["enzo"] = Vector3.new()}
+      local args4 = {500, 500}
+      
+      if args1 and args2 and args3 and args4 then
+        ParryAttempt:FireServer(args1, args2, args3, args4)
+      end
+    end
+  end)
+end
+
+task.spawn(function()
+  while task.wait() do
+    if getgenv().SpamClickA and getgenv().AutoDetectSpam then
+      SuperClick()
+    end
+  end
+end)
+
+local ParryCounter = 0
+local DetectSpamDistance = 0.0001
+
+local function GetBall(ball)
+  local Target = ""
+  
+  ball:GetPropertyChangedSignal("Position"):Connect(function()
+    local PlayerPP = Player and Player.Character and Player.Character.PrimaryPart
+    local NearestPlayer = get_ProxyPlayer()
+    
+    if ball and PlayerPP and NearestPlayer and NearestPlayer.PrimaryPart then
+      local PlayerDistance = (PlayerPP.Position - NearestPlayer.PrimaryPart.Position).Magnitude
+      local BallDistance = (PlayerPP.Position - ball.Position).Magnitude
+      
+      DetectSpamDistance = 25 + math.clamp(ParryCounter / 3, 0, 25)
+      
+      if ParryCounter > 2 and PlayerDistance < DetectSpamDistance and BallDistance < 55 then
+        getgenv().SpamClickA = true
+      else
+        getgenv().SpamClickA = false
+      end
+    end
+  end)
+  ball:GetAttributeChangedSignal("target"):Connect(function()
+    Target = ball:GetAttribute("target")
+    local NearestPlayer = get_ProxyPlayer()
+    
+    if NearestPlayer then
+      if Target == NearestPlayer.Name or Target == Player.Name then
+        ParryCounter = ParryCounter + 1
+      else
+        ParryCounter = 0.0001
+      end
+    end
+  end)
+end
+
+for _,ball in pairs(Balls:GetChildren()) do
+  if ball and not ball:GetAttribute("realBall") then
+    return
+  end
+  
+  GetBall(ball)
+end
+
+Balls.ChildAdded:Connect(function(ball)
+  if not getgenv().AutoDetectSpam then
+    return
+  elseif ball and not ball:GetAttribute("realBall") then
+    return
+  end
+  
+  getgenv().SpamClickA = false
+  ParryCounter = 0
+  GetBall(ball)
+end)
+  	end    
+})
+
+--sec
+ local Section = Tab:AddSection({
+     Name = "Esp"
+ })
+Tab:AddToggle({
+	  	Name = "Esp Ball",
+	  	Default = false,
+	  	Callback = function(Value)
+	  		print(Value)
+	  		local function ESP_Ball()
+  while getgenv().ESP_Ball == true do task.wait()
+    local plr = game.Players.LocalPlayer
+    local plrRP = plr.Character:FindFirstChild("HumanoidRootPart")
+    for ___,ball in pairs(workspace:WaitForChild("Balls", 10):GetChildren()) do
+      if ball and ball:IsA("Part") and ball:GetAttribute("realBall") == true and not ball:FindFirstChild("ESP_samirayt") then
+        
+        local Folder = Instance.new("Folder", ball)
+        local BHA = Instance.new("BoxHandleAdornment",Folder)
+        local BillboardGui = Instance.new("BillboardGui", BHA)
+        local TextLabel = Instance.new("TextLabel", BillboardGui)
+        Folder.Name = "ESP_samirayt"
+        
+        BHA.Size = Vector3.new(1,0, 1,0)
+        BHA.Name = "ESP_samirayt"
+        BHA.AlwaysOnTop = true
+        BHA.ZIndex = 10
+        BHA.Transparency = 0
+        
+        BillboardGui.Adornee = ball
+        BillboardGui.Size = UDim2.new(0, 100, 0, 150)
+        BillboardGui.StudsOffset = Vector3.new(0, 1, 0)
+        BillboardGui.AlwaysOnTop = true
+        
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.Position = UDim2.new(0, 0, 0, -50)
+        TextLabel.Size = UDim2.new(0, 100, 0, 100)
+        TextLabel.TextSize = 10
+        TextLabel.TextColor3 = Color3.new(1, 1, 1)
+        TextLabel.TextStrokeTransparency = 0
+        TextLabel.TextYAlignment = Enum.TextYAlignment.Bottom
+        TextLabel.Text = "Ball <...>"
+        TextLabel.ZIndex = 15
+        TextLabel.TextColor3 = Color3.fromRGB(0,255,0)
+        
+        task.spawn(function()
+          while task.wait() do
+            local plr = game.Players.LocalPlayer
+            local plrRP = plr.Character:FindFirstChild("HumanoidRootPart")
+            if plrRP and ball then
+              local distance = math.floor((plrRP.Position - ball.Position).Magnitude)
+              TextLabel.Text = "Ball <" .. tostring(distance) .. ">"
+            end
+          end
+        end)
+      end
+    end
+  end
+  task.wait()
+  for _,v in pairs(workspace:WaitForChild("Balls", 10):GetChildren()) do
+    if v:FindFirstChild("ESP_samirayt") then
+      v:Destroy()
+    end
+  end
+end
+
+local function ESP_plr()
+  while getgenv().ESP_plr == true do task.wait()
+    local plr1 = game.Players.LocalPlayer
+    for _,plr in pairs(game.Players:GetPlayers()) do
+      if plr.Name ~= plr1.Name and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and not plr.Character:FindFirstChild("ESP_samirayt") and workspace:WaitForChild("Alive", 60):FindFirstChild(plr.Name) then
+        
+        local Folder = Instance.new("Folder", plr.Character)
+        local BHA = Instance.new("BoxHandleAdornment", Folder)
+        local BillboardGui = Instance.new("BillboardGui", BHA)
+        local TextLabel = Instance.new("TextLabel", BillboardGui)
+        Folder.Name = "ESP_samirayt"
+        
+        BHA.Size = Vector3.new(1, 0, 1, 0)
+        BHA.Name = "ESP_samirayt"
+        BHA.AlwaysOnTop = true
+        BHA.ZIndex = 10
+        BHA.Transparency = 0
+        
+        BillboardGui.Adornee = plr.Character.HumanoidRootPart
+        BillboardGui.Size = UDim2.new(0, 100, 0, 150)
+        BillboardGui.StudsOffset = Vector3.new(0, 1, 0)
+        BillboardGui.AlwaysOnTop = true
+        
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.Position = UDim2.new(0, 0, 0, -50)
+        TextLabel.Size = UDim2.new(0, 100, 0, 100)
+        TextLabel.TextSize = 10
+        TextLabel.TextColor3 = Color3.new(1, 1, 1)
+        TextLabel.TextStrokeTransparency = 0
+        TextLabel.TextYAlignment = Enum.TextYAlignment.Bottom
+        TextLabel.Text = plr.Name .. " <...>"
+        TextLabel.ZIndex = 15
+        TextLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+        
+        task.spawn(function()
+          while task.wait() do
+            local plrRP = plr1.Character:FindFirstChild("HumanoidRootPart")
+            if plr1 and plrRP and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+              local distance = math.floor((plrRP.Position - plr.Character.HumanoidRootPart.Position).Magnitude)
+              TextLabel.Text = plr.Name .. " <" .. tostring(distance) .. ">"
+            end
+          end
+        end)
+      end
+    end
+  end
+  task.wait()
+  for _,plr in pairs(game.Players:GetPlayers()) do
+    if plr and plr.Character and plr.Character:FindFirstChild("ESP_samiyt") then
+      plr.Character.ESP_samirayt:Destroy()
+    end
+  end
+end
+
+	  	end    
+	  })
+	 
+	
