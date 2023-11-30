@@ -11,7 +11,7 @@ ParrySection:NewButton("Auto parry V1", "Parry V1", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Hosvile/Refinement/main/MC%3ABlade%20Ball%20Parry",true))()
 end)
 
-SpamSection:NewButton("Auto votar", "by samira", function()
+VotaSection:NewButton("Auto votar", "by samira", function()
 _G.AutoVotar = Value
 wait()
 while _G.AutoVotar == true do
@@ -48,124 +48,106 @@ game:GetService("ReplicatedStorage").Packages._Index:FindFirstChild("sleitnick_n
 
 local SpamSection = Main:NewSection("Spam Parry's")
 
-SpamSection:NewButton("auto Spam parry", "by samira", function()
-getgenv().AutoDetectSpam = true
-
-    local Alive = workspace:WaitForChild("Alive", 9e9)
-local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Remotes = ReplicatedStorage:WaitForChild("Remotes", 9e9)
-local ParryAttempt = Remotes:WaitForChild("ParryAttempt", 9e9)
-local Balls = workspace:WaitForChild("Balls", 9e9)
-
-local function get_ProxyPlayer()
-  local Distance = math.huge
-  local plrRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-  local PlayerReturn = nil
+SpamSection:NewButton("Spam parry", "by samira", function()
+local gui = Instance.new("ScreenGui")
+  gui.ResetOnSpawn = false
+  gui.Parent = game.CoreGui
   
-  for _,plr1 in pairs(Alive:GetChildren()) do
-    if plr1:FindFirstChild("Humanoid") and plr1.Humanoid.Health > 50 then
-      if plr1.Name ~= Player.Name and plrRP and plr1:FindFirstChild("HumanoidRootPart") then
-        local magnitude = (plr1.HumanoidRootPart.Position - plrRP.Position).Magnitude
-        if magnitude <= Distance then
-          Distance = magnitude
-          PlayerReturn = plr1
-        end
-      end
+  local frame = Instance.new("Frame")
+  frame.Position = UDim2.new(0, 40, 0, 40)
+  frame.Size = UDim2.new(0, 70, 0, 50)
+  frame.BackgroundColor3 = Color3.new(0, 0, 0)
+  frame.BorderSizePixel = 0
+  frame.Parent = gui
+  
+  local button = Instance.new("TextButton")
+  button.Text = "Deactivate"
+  button.Size = UDim2.new(1, -10, 1, -10)
+  button.Position = UDim2.new(0, 20, 0, 20)
+  button.BackgroundColor3 = Color3.new(1, 1, 1)
+  button.BorderColor3 = Color3.new(0, 0, 0)
+  button.BorderSizePixel = 1
+  button.Font = Enum.Font.SourceSans
+  button.TextColor3 = Color3.new(0, 0, 0)
+  button.TextSize = 16
+  button.Parent = frame
+  
+  local activated = false
+  
+  local function toggle()
+    activated = not activated
+    button.Text = activated and "Activate" or "Deactivate"
+    while activated do
+      local args = {
+        [1] = 0.001,
+        [2] = CFrame.new(-254.2939910888672, 112.13581848144531, -119.27256774902344) * CFrame.Angles(-2.029526710510254, 0.5662040710449219, 2.314905881881714),
+        [3] = {
+          ["2617721424"] = Vector3.new(-273.400146484375, -724.8031005859375, -20.92414093017578),
+        },
+        [4] = {
+          [1] = 910,
+          [2] = 154
+        }
+      }
+      game:GetService("ReplicatedStorage").Remotes.ParryAttempt:FireServer(unpack(args))
+      game:GetService("RunService").Heartbeat:Wait(0.001)
     end
   end
-  return PlayerReturn
-end
-
-local function SuperClick()
-  task.spawn(function()
-    if IsAlive() and #Alive:GetChildren() > 1 then
-      local args1 = 0.001
-      local args2 = CFrame.new()
-      local args3 = {["enzo"] = Vector3.new()}
-      local args4 = {500, 500}
-      
-      if args1 and args2 and args3 and args4 then
-        ParryAttempt:FireServer(args1, args2, args3, args4)
-      end
+  
+  button.MouseButton1Click:Connect(toggle)
+  
+  -- Adicionar keybind "E" para ativar o botão
+  local UserInputService = game:GetService("UserInputService")
+  local eKeyPressed = false
+  
+  UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if input.KeyCode == Enum.KeyCode.E and not gameProcessedEvent then
+      eKeyPressed = true
+      toggle()
     end
   end)
-end
-
-task.spawn(function()
-  while task.wait() do
-    if getgenv().SpamClickA and getgenv().AutoDetectSpam then
-      SuperClick()
-    end
-  end
-end)
-
-local ParryCounter = 0
-local DetectSpamDistance = 0
-
-local function GetBall(ball)
-  local Target = ""
   
-  ball:GetPropertyChangedSignal("Position"):Connect(function()
-    local PlayerPP = Player and Player.Character and Player.Character.PrimaryPart
-    local NearestPlayer = get_ProxyPlayer()
-    
-    if ball and PlayerPP and NearestPlayer and NearestPlayer.PrimaryPart then
-      local PlayerDistance = (PlayerPP.Position - NearestPlayer.PrimaryPart.Position).Magnitude
-      local BallDistance = (PlayerPP.Position - ball.Position).Magnitude
-      
-      DetectSpamDistance = 25 + math.clamp(ParryCounter / 3, 0, 25)
-      
-      if ParryCounter > 2 and PlayerDistance < DetectSpamDistance and BallDistance < 55 then
-        getgenv().SpamClickA = true
-      else
-        getgenv().SpamClickA = false
-      end
+  UserInputService.InputEnded:Connect(function(input, gameProcessedEvent)
+    if input.KeyCode == Enum.KeyCode.E then
+      eKeyPressed = false
     end
   end)
-  ball:GetAttributeChangedSignal("target"):Connect(function()
-    Target = ball:GetAttribute("target")
-    local NearestPlayer = get_ProxyPlayer()
-    
-    if NearestPlayer then
-      if Target == NearestPlayer.Name or Target == Player.Name then
-        ParryCounter = ParryCounter + 1
-      else
-        ParryCounter = 0
-      end
-    end
-  end)
-end
-
-for _,ball in pairs(Balls:GetChildren()) do
-  if ball and not ball:GetAttribute("realBall") then
-    return
-  end
   
-  GetBall(ball)
-end
-
-Balls.ChildAdded:Connect(function(ball)
-  if not getgenv().AutoDetectSpam then
-    return
-  elseif ball and not ball:GetAttribute("realBall") then
-    return
-  end
+  local NotificationHolder = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Module.Lua"))()
+  local Notification = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Client.Lua"))()
   
-  getgenv().SpamClickA = false
-  ParryCounter = 0
-  GetBall(ball)
-end
+  Notification:Notify(
+    {Title = "Paid Black Hub V1", Description = "Obrigado por estar usando o nosso script    /   Black Hub"},
+    {OutlineColor = Color3.fromRGB(80, 80, 80), Time = 5, Type = "option"},
+    {Image = "http://www.roblox.com/asset/?id=6023426923", ImageColor = Color3.fromRGB(255, 84, 84), Callback = function(State) print(tostring(State)) end}
+  )
 end)
 
 local Misc = Window:NewTab("Misc")
 
 local MiscSection = Misc:NewSection("Misc")
 
+MiscSection:NewButton("EmojiCustumizado", function()
+_G.EmojiCustom = Value
+wait()
+while _G.EmojiCustom == true do
+ wait(1)
+ local args = {
+    [1] = true,
+    [2] = "Empyrean"
+}
+
+game:GetService("ReplicatedStorage").Remotes.CustomEmote:FireServer(unpack(args))
+
+ end
+  end)
+
 MiscSection:NewButton("Spam Freeze ball", "Keybind = B/High chance og geting banned", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/JSPSSS/ssssssssssss/main/freezing%20out%20here"))()
+end)
+
+MiscSection:NewButton("Bola esp", function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/samirayt/Tgg/main/Yotu"))()
 end)
 
 MiscSection:NewSlider("Speed changer", "Become Sonic", 500, 0, function(Speed) -- 500 (MaxValue) | 0 (MinValue)
