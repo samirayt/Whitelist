@@ -5,46 +5,97 @@ local Window = Library.CreateLib("Black Hub (Blade ball)", "Midnight")
 
 local Main = Window:NewTab("Main")
 
-local ParrySection = Main:NewSection("Auto parry's")
+local ParrySection = Main:NewSection("Auto parry")
 
 ParrySection:NewButton("Auto parry V1", "Parry V1", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Hosvile/Refinement/main/MC%3ABlade%20Ball%20Parry",true))()
+    local function startAutoParry()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local runService = game:GetService("RunService")
+    local parryButtonPress = replicatedStorage.Remotes.ParryButtonPress
+    local ballsFolder = workspace:WaitForChild("Balls")
+
+    print(".")
+
+    local function onCharacterAdded(newCharacter)
+        character = newCharacter
+    end
+
+    player.CharacterAdded:Connect(onCharacterAdded)
+
+    local focusedBall = nil  
+
+    local function chooseNewFocusedBall()
+        local balls = ballsFolder:GetChildren()
+        focusedBall = nil
+        for _, ball in ipairs(balls) do
+            if ball:GetAttribute("realBall") == true then
+                focusedBall = ball
+                break
+            end
+        end
+    end
+
+    chooseNewFocusedBall()
+
+    local function timeUntilImpact(ballVelocity, distanceToPlayer, playerVelocity)
+        local directionToPlayer = (character.HumanoidRootPart.Position - focusedBall.Position).Unit
+        local velocityTowardsPlayer = ballVelocity:Dot(directionToPlayer) - playerVelocity:Dot(directionToPlayer)
+        
+        if velocityTowardsPlayer <= 0 then
+            return math.huge
+        end
+        
+        local distanceToBeCovered = distanceToPlayer - 40
+        return distanceToBeCovered / velocityTowardsPlayer
+    end
+
+    local BASE_THRESHOLD = 0.15
+    local VELOCITY_SCALING_FACTOR = 0.002
+
+    local function getDynamicThreshold(ballVelocityMagnitude)
+        local adjustedThreshold = BASE_THRESHOLD - (ballVelocityMagnitude * VELOCITY_SCALING_FACTOR)
+        return math.max(0.12, adjustedThreshold)
+    end
+
+    local function checkBallDistance()
+        if not character:FindFirstChild("Highlight") then return end
+        local charPos = character.PrimaryPart.Position
+        local charVel = character.PrimaryPart.Velocity
+
+        if focusedBall and not focusedBall.Parent then
+            chooseNewFocusedBall()
+        end
+
+        if not focusedBall then return end
+
+        local ball = focusedBall
+        local distanceToPlayer = (ball.Position - charPos).Magnitude
+
+        if distanceToPlayer <= 12 then
+            parryButtonPress:Fire()
+            return
+        end
+
+        local timeToImpact = timeUntilImpact(ball.Velocity, distanceToPlayer, charVel)
+        local dynamicThreshold = getDynamicThreshold(ball.Velocity.Magnitude)
+
+        if timeToImpact < dynamicThreshold then
+            parryButtonPress:Fire()
+        end
+    end
+    heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        checkBallDistance()
+    end)
+end
+
+local function stopAutoParry()
+    if heartbeatConnection then
+        heartbeatConnection:Disconnect()
+        heartbeatConnection = nil
+    end
 end)
-
-VotaSection:NewButton("Auto votar", "by samira", function()
-_G.AutoVotar = Value
-wait()
-while _G.AutoVotar == true do
- wait(2)
- if VotarEscolhido == "Classico" then
-  local args = {
-    [1] = "FFA"
-}
-
-game:GetService("ReplicatedStorage").Packages._Index:FindFirstChild("sleitnick_net@0.1.0").net:FindFirstChild("RE/UpdateVotes"):FireServer(unpack(args))
-
- end
- 
-  if VotarEscolhido == "2 times" then
-   local args = {
-    [1] = "Team2"
-}
-
-game:GetService("ReplicatedStorage").Packages._Index:FindFirstChild("sleitnick_net@0.1.0").net:FindFirstChild("RE/UpdateVotes"):FireServer(unpack(args))
-
-  end
-  
-   if VotarEscolhido == "4 times" then
-    local args = {
-    [1] = "Team4"
-}
-
-game:GetService("ReplicatedStorage").Packages._Index:FindFirstChild("sleitnick_net@0.1.0").net:FindFirstChild("RE/UpdateVotes"):FireServer(unpack(args))
-
-   end
- wait()
- end
-  end)
 
 local SpamSection = Main:NewSection("Spam Parry's")
 
