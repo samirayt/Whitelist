@@ -1,6 +1,5 @@
 local VLib = loadstring(game:HttpGet("https://pastebin.com/raw/Mb49kKTP"))()
 
-
 		MAINTTL = "PAID BLACK HUB V3" 
 
 local win = VLib:Window("BLACK HUB V1", Color3.fromRGB(196, 40, 28))
