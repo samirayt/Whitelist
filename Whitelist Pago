@@ -13,7 +13,7 @@ local Window = Rayfield:CreateWindow({
 	KeySettings = {
 		Title = "BlackHub",
 		Subtitle = "Black Hub V1",
-		Note = "   ",
+		Note = "https://discord.com/invite/M2UFnXjxv8",
 		SaveKey = true,
 		Key = "BlackHub"
 	}
