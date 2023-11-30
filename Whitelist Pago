@@ -16,7 +16,6 @@
      Name = "Main"
  })
   
---Button
 Tab:AddButton({
 	Name = "Auto Parry",
 	Callback = function()
@@ -108,12 +107,8 @@ local function stopAutoParry()
         heartbeatConnection = nil
     end
 end
-      	
-  	end    
 })
 
-
---Button
 Tab:AddButton({
 	Name = "DetectSpam",
 	Callback = function()
@@ -229,14 +224,14 @@ Balls.ChildAdded:Connect(function(ball)
   getgenv().SpamClickA = false
   ParryCounter = 0
   GetBall(ball)
-end)
+end
   	end    
 })
 
---sec
  local Section = Tab:AddSection({
      Name = "Esp"
  })
+ 
 Tab1:AddToggle({
 	  	Name = "Esp Ball",
 	  	Default = false,
@@ -350,9 +345,5 @@ local function ESP_plr()
       plr.Character.ESP_samirayt:Destroy()
     end
   end
-end
-
-	  	end    
-	  })
-	 
-	
+	  	end 
+ })	
