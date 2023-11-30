@@ -1,43 +1,46 @@
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
-local Window = Rayfield:CreateWindow({
-	Name = "Rayfield Example Window",
-	LoadingTitle = "Black Hub",
-	LoadingSubtitle = "Black Hub",
-	ConfigurationSaving = {
-		Enabled = true,
-		FolderName = "Black Hub",
-		FileName = "Black Hub"
-	},
-	KeySystem = false, -- Set this to true to use their key system
-	KeySettings = {
-		Title = "Black Hub",
-		Subtitle = "Black Hub",
-		Note = "Join the discord (discord.gg/sirius)",
-		SaveKey = true,
-		Key = "Black Hub"
-	}
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl -- Used when theres no MinimizeKeybind
 })
 
-Rayfield:Notify("Black Hub", "Content/Description Example", 4483362458) -- Notfication -- Title, Content, Image
+--Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
 
-local Tab = Window:CreateTab("Blade ball", 4483362458) -- Title, Image
+local Options = Fluent.Options
 
-local Section = Tab:CreateSection("Auto Parry")
+do
+    Fluent:Notify({
+        Title = "Notification",
+        Content = "This is a notification",
+        SubContent = "SubContent", -- Optional
+        Duration = 5 -- Set to nil to make the notification not disappear
+    })
 
-local Toggle = Tab:CreateToggle({
-	Name = "Auto Parry",
-	CurrentValue = false,
-	Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	Callback = function(Value)
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/Hosvile/Refinement/main/MC%3ABlade%20Ball%20Parry%20V4.0.0",true))()
-	end,
-})
-
-local Button = Tab:CreateButton({
-    Name = "Auto Detect",
-    Callback = function()
-        getgenv().AutoDetectSpam = true
+    Tabs.Main:AddButton({
+        Title = "DetectSpam",
+        Description = "Very important button",
+        Callback = function()
+            Window:Dialog({
+                Title = "Title",
+                Content = "This is a dialog",
+                Buttons = {
+                    {
+                        Title = "Confirm",
+                        Callback = function()
+                            print("Confirmed the dialog.")
+                            getgenv().AutoDetectSpam = true
 
         --///////////////////////////////////////////////////////////////////--
         
@@ -149,6 +152,119 @@ local Button = Tab:CreateButton({
           getgenv().SpamClickA = false
           ParryCounter = 0
           GetBall(ball)
-        end)
-end,
-}) 
+        end
+                        end
+                    },
+                    {
+                        Title = "Cancel",
+                        Callback = function()
+                            print("Cancelled the dialog.")
+                        end
+                    }
+                }
+            })
+        end
+    })
+
+    local Dropdown = Tabs.Main:AddDropdown("Dropdown", {
+        Title = "Dropdown",
+        Values = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen"},
+        Multi = false,
+        Default = 1,
+    })
+
+    Dropdown:SetValue("four")
+
+    Dropdown:OnChanged(function(Value)
+        print("Dropdown changed:", Value)
+    end)
+
+
+    
+    local MultiDropdown = Tabs.Main:AddDropdown("MultiDropdown", {
+        Title = "Dropdown",
+        Description = "You can select multiple values.",
+        Values = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen"},
+        Multi = true,
+        Default = {"seven", "twelve"},
+    })
+
+    MultiDropdown:SetValue({
+        three = true,
+        five = true,
+        seven = false
+    })
+
+    MultiDropdown:OnChanged(function(Value)
+        local Values = {}
+        for Value, State in next, Value do
+            table.insert(Values, Value)
+        end
+        print("Mutlidropdown changed:", table.concat(Values, ", "))
+    end)
+
+
+
+    local Colorpicker = Tabs.Main:AddColorpicker("Colorpicker", {
+        Title = "Colorpicker",
+        Default = Color3.fromRGB(96, 205, 255)
+    })
+
+    Colorpicker:OnChanged(function()
+        print("Colorpicker changed:", Colorpicker.Value)
+    end)
+    
+    Colorpicker:SetValueRGB(Color3.fromRGB(0, 255, 140))
+
+
+
+    local TColorpicker = Tabs.Main:AddColorpicker("TransparencyColorpicker", {
+        Title = "Colorpicker",
+        Description = "but you can change the transparency.",
+        Transparency = 0,
+        Default = Color3.fromRGB(96, 205, 255)
+    })
+
+    TColorpicker:OnChanged(function()
+        print(
+            "TColorpicker changed:", TColorpicker.Value,
+            "Transparency:", TColorpicker.Transparency
+        )
+    end)
+
+-- Addons:
+-- SaveManager (Allows you to have a configuration system)
+-- InterfaceManager (Allows you to have a interface managment system)
+
+-- Hand the library over to our managers
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+-- Ignore keys that are used by ThemeManager.
+-- (we dont want configs to save themes, do we?)
+SaveManager:IgnoreThemeSettings()
+
+-- You can add indexes of elements the save manager should ignore
+SaveManager:SetIgnoreIndexes({})
+
+-- use case for doing it this way:
+-- a script hub could have themes in a global folder
+-- and game configs in a separate folder per game
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
+
+-- You can use the SaveManager:LoadAutoloadConfig() to load a config
+-- which has been marked to be one that auto loads!
+SaveManager:LoadAutoloadConfig()
