@@ -464,21 +464,11 @@ local ToggleParry = AddToggle(Main, {
   end
 })
 
-local ToggleDetecta = AddToggle(Main, {
-  Name = "Auto DetectSpam [Em Breve]",
-  Default = false,
-  Callback = function(Value)
-    
-  end
-})
-
-local section02 = AddSection(Main, {"Spam"})
-
 --Codigo
 
 local MobileToggle = AddMobileToggle({
   Name = "Spam",
-  Visible = true,
+  Visible = false,
   Callback = function(val)
     getgenv().Spam = val
        Spam()
@@ -487,7 +477,7 @@ local MobileToggle = AddMobileToggle({
 
 local MobileToggle = AddMobileToggle({
   Name = "Manual SpamV2",
-  Visible = true,
+  Visible = false
   Callback = function(val)
   local gui = Instance.new("ScreenGui")
   gui.ResetOnSpawn = false
@@ -572,8 +562,6 @@ local Toggle2 = AddToggle(Main, {
   end
 })
 
-local section03 = AddSection(Main, {"Bola"})
-
 local Toggle3 = AddToggle(Main, {
   Name = "Olhar Pra Bola",
   Default = false,
@@ -583,8 +571,6 @@ local Toggle3 = AddToggle(Main, {
   end
 })
 
-local section095 = AddSection(Main, {"Funções Legais"})
-
 local Toggle55 = AddToggle(Main, {
   Name = "EmojiCustomizado",
   Default = false,
@@ -593,8 +579,6 @@ local Toggle55 = AddToggle(Main, {
    Emoji()
   end
 })
-
-local section084 = AddSection(Main, {"Auto Votar"})
 
 local VotarEscolhido
 
