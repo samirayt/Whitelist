@@ -475,10 +475,18 @@ local MobileToggle = AddMobileToggle({
   end
 })
 
-local MobileToggle = AddMobileToggle({
-  Name = "Manual SpamV2",
-  Visible = false
-  Callback = function(val)
+local Toggle = AddToggle(Main, {
+  Name = "Spam Atalho",
+  Default = false,
+  Callback = function(Value)
+    MobileToggle.Visible = Value
+  end
+})
+
+local Toggle = AddToggle(Main, {
+  Name = "Olhar Pra Bola",
+  Default = false,
+  Callback = function(Value)
   local gui = Instance.new("ScreenGui")
   gui.ResetOnSpawn = false
   gui.Parent = game.CoreGui
@@ -554,15 +562,7 @@ local MobileToggle = AddMobileToggle({
 end
 })
 
-local Toggle2 = AddToggle(Main, {
-  Name = "Spam Atalho",
-  Default = false,
-  Callback = function(Value)
-    MobileToggle.Visible = Value
-  end
-})
-
-local Toggle3 = AddToggle(Main, {
+local Toggle = AddToggle(Main, {
   Name = "Olhar Pra Bola",
   Default = false,
   Callback = function(Value)
@@ -571,7 +571,7 @@ local Toggle3 = AddToggle(Main, {
   end
 })
 
-local Toggle55 = AddToggle(Main, {
+local Toggle = AddToggle(Main, {
   Name = "EmojiCustomizado",
   Default = false,
   Callback = function(Value)
@@ -579,8 +579,6 @@ local Toggle55 = AddToggle(Main, {
    Emoji()
   end
 })
-
-local VotarEscolhido
 
 local Dropdownpet = AddDropdown(Main, {
   Name = "Escolha o Modo",
